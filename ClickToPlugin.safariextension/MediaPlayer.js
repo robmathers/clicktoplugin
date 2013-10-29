@@ -30,6 +30,11 @@ MediaPlayer.prototype.openInQTP = function(source) {
 	openInQuickTimePlayer(this.getURL(source));
 };
 
+MediaPlayer.prototype.openInQTPHandler = function(source) {
+	if(this.mediaElement) this.mediaElement.pause();
+	openInQuickTimeHandler(this.getURL(source));
+};
+
 MediaPlayer.prototype.airplay = function(source) {
 	var position = 0;
 	if(this.mediaElement) {
@@ -70,7 +75,7 @@ MediaPlayer.prototype.init = function(style) {
 	this.container = document.createElement("div");
 	this.container.className = "CTPmediaPlayer";
 	this.container.tabIndex = -1; // make focusable
-	
+
 	this.mediaElement = document.createElement(this.audioOnly ? "audio" : "video");
 	this.mediaElement.id = "CTPmediaElement" + this.contextInfo.elementID;
 	this.mediaElement.className = "CTPmediaElement";
@@ -88,17 +93,17 @@ MediaPlayer.prototype.init = function(style) {
 		break;
 	}
 	this.container.appendChild(this.mediaElement);
-	
+
 	// Set styles
 	this.container.style.setProperty("width", this.width + "px", "important");
 	this.container.style.setProperty("height", this.height + "px", "important");
 	this.mediaElement.style.setProperty("width", this.width + "px", "important");
 	this.mediaElement.style.setProperty("height", this.height + "px", "important");
 	applyCSS(this.container, style, ["position", "top", "right", "bottom", "left", "z-index", "clear", "float", "vertical-align", "margin-top", "margin-right", "margin-bottom", "margin-left", "-webkit-margin-before-collapse", "-webkit-margin-after-collapse"]);
-	
+
 	// Set volume
 	this.mediaElement.volume = settings.volume;
-	
+
 	// Additional controls
 	this.initTrackSelector();
 	if(this.playlistLength > 1) this.initPlaylistControls();
@@ -106,7 +111,7 @@ MediaPlayer.prototype.init = function(style) {
 		this.sourceSelector.updateHandlers();
 		this.sourceSelector.attachTo(this.container);
 	}
-	
+
 	// Set listeners
 	this.addListeners();
 	this.registerShortcuts();
@@ -187,15 +192,15 @@ MediaPlayer.prototype.loadTrack = function(track) {
 
 MediaPlayer.prototype.switchSource = function(source) {
 	if(source === this.currentSource) return;
-	
+
 	var currentTime = this.mediaElement.currentTime;
 	var setInitialTime = function(event) {
 		event.target.removeEventListener("loadeddata", setInitialTime, false);
 		event.target.currentTime = currentTime;
 	};
-	
+
 	if(this.sourceSelector) this.sourceSelector.setSource(source);
-	
+
 	this.load(this.currentTrack, source, true, !this.playlist[this.currentTrack].sources[this.currentSource].isAudio !== !this.playlist[this.currentTrack].sources[source].isAudio);
 	this.mediaElement.addEventListener("loadeddata", setInitialTime, false);
 };
@@ -209,15 +214,15 @@ MediaPlayer.prototype.load = function(track, source, autoplay, updatePoster) {
 	// Pause first to prevent undesirable sound quirks
 	// Conditional needed, otherwise Webkit fails to reset autoplaying flag on initial load
 	if(!this.mediaElement.paused) this.mediaElement.pause();
-	
+
 	// Update internals
 	this.currentTrack = track;
 	this.currentSource = source;
-	
+
 	// Update control bar
 	this.shadowDOM.update();
 	this.trackSelector.update();
-	
+
 	// Finally, load the new source
 	this.mediaElement.src = this.playlist[track].sources[source].url;
 	if(updatePoster) this.updatePoster(); // must be done after setting src (#67900)
@@ -251,7 +256,7 @@ MediaPlayer.prototype.setContextInfo = function(event) {
 	var media = this.playlist[this.currentTrack];
 	var source = event.source;
 	if(source === undefined) source = this.currentSource;
-	
+
 	var contextInfo = this.contextInfo;
 	if(media.siteInfo) contextInfo.site = media.siteInfo.name;
 	contextInfo.hasMedia = true;
@@ -376,27 +381,27 @@ ShadowDOM interface
 
 MediaPlayer.prototype.initShadowDOM = function() {
 	var sheet = this.container.appendChild(document.createElement("style")).sheet;
-	
+
 	// Hide status display in fullscreen
 	sheet.insertRule("#" + this.mediaElement.id + ":-webkit-full-screen::-webkit-media-controls-status-display{display:none;}", 0);
-	
+
 	var pseudoElements = {"controlsPanel": "-webkit-media-controls-panel", "statusDisplay": "-webkit-media-controls-status-display", "statusDisplayAfter": "-webkit-media-controls-status-display::after", "playButton": "-webkit-media-controls-play-button", "muteButton": "-webkit-media-controls-mute-button", "volumeSliderContainer": "-webkit-media-controls-volume-slider-container", "rewindButton": "-webkit-media-controls-rewind-button", "fullscreenButton": "-webkit-media-controls-fullscreen-button", "timelineContainer": "-webkit-media-controls-timeline-container", "seekBackButton": "-webkit-media-controls-seek-back-button", "seekForwardButton": "-webkit-media-controls-seek-forward-button"};
-	
+
 	var shadowDOM = {};
 	for(var e in pseudoElements) {
 		sheet.insertRule("#" + this.mediaElement.id + ":not(:-webkit-full-screen)::" + pseudoElements[e] + "{}", 0);
 		shadowDOM[e] = sheet.cssRules[0];
 	}
-	
+
 	shadowDOM.controlsPanel.style.position = "absolute"; // for height < 25 in Safari 6 (cf. mediaControls.css)
 	if(settings.hideRewindButton) shadowDOM.rewindButton.style.display = "none";
-	
+
 	// Status display
 	shadowDOM.statusDisplay.style.textAlign = "left"; // set to "right" in UA stylesheet
 	shadowDOM.statusDisplay.style.whiteSpace = "pre";
 	shadowDOM.statusDisplay.style.textOverflow = "ellipsis";
 	shadowDOM.statusDisplayAfter.style.paddingLeft = "1ex";
-	
+
 	var _this = this;
 	shadowDOM.update = function() {
 		// Add title after status display
@@ -404,13 +409,13 @@ MediaPlayer.prototype.initShadowDOM = function() {
 		if(_this.playlistLength > 1) text += "[" + _this.printTrack(_this.currentTrack) + "/" + _this.playlistLength + "]\u2002";
 		text += _this.getTitle().replace(/'/g, "\\'");
 		this.statusDisplayAfter.style.content = "'" + text + "'";
-		
+
 		// Hide the timeline (WebKit fails to do so when loading a new source)
 		this.timelineContainer.style.display = "none";
 		// Show status display
 		this.statusDisplay.style.setProperty("display", "block", "important");
 	};
-	
+
 	this.mediaElement.addEventListener("loadedmetadata", function() {
 		// Remove !important from statusDisplay.style.display so WebKit can hide it if appropriate
 		shadowDOM.statusDisplay.style.removeProperty("display"); // see #45778
@@ -418,7 +423,7 @@ MediaPlayer.prototype.initShadowDOM = function() {
 		// Show the timeline
 		shadowDOM.timelineContainer.style.removeProperty("display");
 	}, false);
-	
+
 	if(this.playlistLength > 1) {
 		// Reorder controls
 		if("WebkitOrder" in document.documentElement.style) { // Safari >= 6.1
@@ -440,7 +445,7 @@ MediaPlayer.prototype.initShadowDOM = function() {
 			shadowDOM.timelineContainer.style.WebkitBoxOrdinalGroup = "4";
 			shadowDOM.fullscreenButton.style.WebkitBoxOrdinalGroup = "1";
 		}
-		
+
 		// Show back/forward buttons
 		shadowDOM.seekBackButton.style.display = "block";
 		shadowDOM.seekBackButton.style.marginLeft = "5px";
@@ -451,7 +456,7 @@ MediaPlayer.prototype.initShadowDOM = function() {
 		shadowDOM.seekForwardButton.style.width = "20px";
 		shadowDOM.seekForwardButton.style.height = "12px";
 	}
-	
+
 	this.shadowDOM = shadowDOM;
 };
 
@@ -466,13 +471,13 @@ MediaPlayer.prototype.initSourceSelector = function() {
 	var list = document.createElement("div");
 	list.className = "CTPsourceList";
 	container.appendChild(list);
-	
+
 	var append = function(name, click, url, source) {
 		var a = document.createElement("a");
 		a.className = "CTPsourceItem";
 		if(url) a.href = url;
 		a.textContent = name;
-		
+
 		a.addEventListener("click", function(event) {
 			event.stopImmediatePropagation(); // Needed on Facebook
 			if(event.altKey) return; // to allow option-click download
@@ -482,28 +487,29 @@ MediaPlayer.prototype.initSourceSelector = function() {
 		if(source !== undefined) a.addEventListener("contextmenu", function(event) {event.source = source;}, false);
 		list.appendChild(a);
 	};
-	
+
 	var clickSource = function(i) {
 		player.currentSource = i;
 		loadMedia(player.contextInfo.elementID, true);
 	};
 	var clickPlugin = function() {loadPlugin(player.contextInfo.elementID);};
 	var clickQTP = function() {player.openInQTP();};
+	var clickQTPHandler = function() {player.openInQTPHandler();};
 	var clickAirPlay = function() {player.airplay();};
 	var clickSite = function() {player.viewOnSite();};
-	
+
 	this.sourceSelector = {
 		"updateHandlers": function() {
 			clickSource = function(i) {player.switchSource(i);};
 			clickPlugin = function() {restorePlugin(player.contextInfo.elementID);};
 		},
-		
+
 		"attachTo": function(element) {
 			container.style.setProperty("-webkit-transition-property", "none", "important");
 			element.appendChild(container);
 			setTimeout(function() {container.style.setProperty("-webkit-transition-property", "opacity", "important");}, 0);
 		},
-		
+
 		"update": function() {
 			container.classList.add("CTPhidden");
 			list.innerHTML = "";
@@ -517,13 +523,16 @@ MediaPlayer.prototype.initSourceSelector = function() {
 			}
 			if(settings.showPluginSource && player.contextInfo.plugin) append(player.contextInfo.plugin, clickPlugin, player.contextInfo.src);
 			if(settings.showSiteSource && media.siteInfo) append(media.siteInfo.name, clickSite, media.siteInfo.url);
-			if(settings.showQTPSource && player.currentSource !== undefined) append(QT_PLAYER, clickQTP);
+			if(settings.showQTPSource && player.currentSource !== undefined) {
+                append(QT_PLAYER, clickQTP);
+			    append("QuickTime 10.9", clickQTPHandler);
+			    }
 			if(settings.showAirPlaySource && player.currentSource !== undefined) append("AirPlay", clickAirPlay);
-			
+
 			// Unhide if it doesn't overflow
 			if(list.childNodes.length > 0 && container.offsetWidth + 10 < player.width && container.offsetHeight + (player.mediaElement ? 35 : 10) < player.height) container.classList.remove("CTPhidden");
 		},
-		
+
 		"setSource": function(i) {
 			list.childNodes[player.currentSource].classList.remove("CTPcurrentSource");
 			list.childNodes[i].classList.add("CTPcurrentSource");
@@ -541,21 +550,21 @@ MediaPlayer.prototype.initTrackSelector = function() {
 	container.className = "CTPtrackSelector CTPhidden";
 	var selector = document.createElement("select");
 	selector.className = "CTPtrackList";
-	
+
 	container.appendChild(selector);
-	
+
 	var show = function() {
 		player.shadowDOM.controlsPanel.style.display = "none";
 		container.classList.remove("CTPhidden");
 		selector.focus();
 	};
-	
+
 	var hide = function() {
 		player.container.focus();
 		container.classList.add("CTPhidden");
 		player.shadowDOM.controlsPanel.style.removeProperty("display");
 	};
-	
+
 	this.trackSelector = {
 		"toggle": function() {
 			if(container.classList.contains("CTPhidden")) show();
@@ -565,9 +574,9 @@ MediaPlayer.prototype.initTrackSelector = function() {
 			selector.value = player.currentTrack;
 		},
 	};
-	
+
 	this.container.appendChild(container);
-	
+
 	if(this.playlistLength === 1) {
 		selector.disabled = true;
 		var option = document.createElement("option");
@@ -576,7 +585,7 @@ MediaPlayer.prototype.initTrackSelector = function() {
 		selector.appendChild(option);
 		return;
 	}
-	
+
 	for(var i = 0; i < this.playlistLength; i++) {
 		var option = document.createElement("option");
 		option.disabled = true;
@@ -584,7 +593,7 @@ MediaPlayer.prototype.initTrackSelector = function() {
 		option.textContent = "[" + (i+1) + "/" + this.playlistLength + "]\u2002" + LOADING;
 		selector.appendChild(option);
 	}
-	
+
 	this.trackSelector.add = function(playlist) {
 		var start = player.playlist.length - playlist.length;
 		for(var i = 0; i < playlist.length; i++) {
@@ -598,18 +607,18 @@ MediaPlayer.prototype.initTrackSelector = function() {
 			option.textContent = title;
 		}
 	};
-	
+
 	selector.addEventListener("change", function(event) {
 		player.loadTrack(parseInt(event.target.value));
 		hide();
 		player.container.focus();
 	}, false);
-	
+
 	if(settings.keys.trackSelector) { // override keydown shortcuts
 		selector.addEventListener("keydown", function(event) {
 			if((event.keyIdentifier === "U+0020" || event.keyIdentifier === "Up" || event.keyIdentifier === "Down") && !event.shiftKey && !event.metaKey && !event.altKey && !event.ctrlKey) event.allowDefault = true;
 		}, false);
 	}
-	
+
 	this.trackSelector.add(this.playlist);
 };

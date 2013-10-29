@@ -68,6 +68,11 @@ function openInQuickTimePlayer(url) {
 	setTimeout(function() {document.body.removeChild(embed);}, 10000);
 }
 
+function openInQuickTimeHandler(url) {
+    var quickTimeURL = url.replace(/^https?/, "ctpQTopen");
+    safari.self.tab.dispatchMessage("openURL", quickTimeURL);
+}
+
 // Shortcuts
 function simplifyWheelDelta(x, y) {
 	if(x > y && y > -x) return "left";
