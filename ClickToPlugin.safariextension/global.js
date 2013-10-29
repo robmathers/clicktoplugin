@@ -94,6 +94,9 @@ function respondToMessage(event) {
 	case "openTab":
 		openTab(event.message);
 		break;
+	case "openURL":
+	    openURL(event.message);
+	    break;
 	case "airplay":
 		airplay(event.message.url, event.message.position);
 		break;
@@ -111,7 +114,7 @@ function respondToMessage(event) {
 
 function canLoad(data, tab) {
 	var response = {};
-	
+
 	// Determine plugin
 	var plugin;
 	if(!data.src && !data.type) {
@@ -127,61 +130,61 @@ function canLoad(data, tab) {
 	}
 	// This is correct but really not worth it (classid is "java:...")
 	// if(data.params.classid && !/^application\/x-java-(?:applet|bean|vm)$/.test(type)) plugin = null;
-	
+
 	/* plugin is now either:
 	-> null: Safari will not use a plugin
 	-> nativePlugin: Safari will try to load the resource directly but use a plugin for Content-Type in case of failure
 	-> the plugin object that Safari will use
 	*/
-	
+
 	if(plugin === nativePlugin) {
 		response.isNative = true;
 		plugin = resolveNativePlugin(data, tab);
 	}
 	if(isDataURI(data.src)) data.src = "";
-	
+
 	if(plugin !== null && plugin !== nativePlugin) {
 		if(isAllowed(plugin)) return true;
 		adjustSource(data, plugin);
 		response.plugin = getPluginName(plugin);
 	}
-	
+
 	// Check if invisible
 	if(data.width <= settings.maxInvisibleSize && data.height <= settings.maxInvisibleSize && data.width > 0 && data.height > 0) {
 		if(settings.allowInvisible) return true;
 		response.isInvisible = true;
 	}
-	
+
 	// Check control lists
 	if(settings.invertWhitelists !== (matchList(settings.locationsWhitelist, data.location) || matchList(settings.sourcesWhitelist, data.src))) return true;
 	if(settings.invertBlacklists !== (matchList(settings.locationsBlacklist, data.location) || matchList(settings.sourcesBlacklist, data.src))) return false;
-	
+
 	// Check sIFR
 	if(/\bsIFR-flash\b/.test(data.params.class)) {
 		if(settings.sIFRPolicy === "autoload") return true;
 		if(settings.sIFRPolicy === "textonly") return "disableSIFR";
 	}
-	
+
 	// Give user a chance to allow if a QT object would launch QTP
 	if(response.plugin === "QuickTime" && data.params.href && data.params.autohref !== undefined && /^quicktimeplayer$/i.test(data.params.target)) {
 		if(/\bCTPallowedToLoad\b/.test(data.params.class)) return true; // for other extensions with open-in-QTP functionality
 		if(confirm(QT_CONFIRM_LAUNCH_DIALOG(data.params.href))) return true;
 	}
-	
+
 	if(data.documentID === undefined) {
 		data.documentID = documentCount++;
 		response.documentID = data.documentID;
 		response.settings = getSettings(INJECTED_SETTINGS);
 	}
 	response.src = data.src;
-	
+
 	// Killers
 	if(plugin === nativePlugin) {
 		if(settings.loadIfNotKilled) return true;
 	} else {
 		if(!kill(data, tab) && (plugin === null || settings.loadIfNotKilled)) return true;
 	}
-	
+
 	return response;
 }
 
@@ -229,7 +232,7 @@ function handleContextMenu(event) {
 		return;
 	}
 	if(u.location === safari.extension.baseURI + "settings.html") return;
-	
+
 	if(u.elementID === undefined) { // Generic menu
 		if(settings.loadAllContext && u.blocked > 0 && (u.blocked > u.invisible || !settings.loadInvisibleContext)) c.appendContextMenuItem("loadAll", LOAD_ALL_PLUGINS + " (" + u.blocked + ")");
 		if(settings.loadInvisibleContext && u.invisible > 0) c.appendContextMenuItem("loadInvisible", LOAD_INVISIBLE_PLUGINS + " (" + u.invisible + ")");
@@ -239,7 +242,7 @@ function handleContextMenu(event) {
 		if(settings.settingsContext) c.appendContextMenuItem("settings", PREFERENCES);
 		return;
 	}
-	
+
 	if(u.isMedia) c.appendContextMenuItem("restore", RESTORE_PLUGIN(u.plugin));
 	else {
 		if(u.hasMedia) c.appendContextMenuItem("load", LOAD_PLUGIN(u.plugin));
@@ -340,11 +343,11 @@ function kill(data, tab) {
 		}
 	}
 	if(killerID === undefined) return false;
-	
+
 	var callback = function(mediaData) {
 		if(!tab.page) return; // user has closed tab
 		if(mediaData.playlist.length === 0) return;
-		
+
 		for(var i = 0; i < mediaData.playlist.length; i++) {
 			if(mediaData.playlist[i] === null) continue;
 			mediaData.playlist[i].defaultSource = chooseDefaultSource(mediaData.playlist[i].sources);
@@ -355,10 +358,10 @@ function kill(data, tab) {
 			mediaData.autoplay = matchList(settings.mediaWhitelist, data.location);
 			mediaData.autoload = mediaData.playlist[0].defaultSource !== undefined && settings.defaultPlayer === "html5" && (mediaData.autoplay || settings.mediaAutoload);
 		}
-		
+
 		tab.page.dispatchMessage("mediaData", {"documentID": data.documentID, "elementID": data.elementID, "data": mediaData});
 	};
-	
+
 	setTimeout(function() {killers[killerID].process(data, callback);}, 0);
 	return true;
 }

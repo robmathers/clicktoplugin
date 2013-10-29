@@ -42,6 +42,13 @@ function openTab(url) {
 	tab.url = url;
 }
 
+function openURL(url) {
+	var tab;
+	if(safari.application.activeBrowserWindow) tab = safari.application.activeBrowserWindow.activeTab;
+	else tab = safari.application.openBrowserWindow().activeTab;
+	tab.url = url;
+}
+
 function airplay(url, position) {
 	var xhr = new XMLHttpRequest();
 	var port = ":7000";
@@ -158,7 +165,7 @@ function chooseDefaultSource(sources) {
 	var defaultSource;
 	var hasNativeSource = false;
 	var resolutionMap = [];
-	
+
 	for(var i = sources.length - 1; i >= 0; i--) {
 		var h = sources[i].height;
 		if(!h) h = 0;
@@ -172,7 +179,7 @@ function chooseDefaultSource(sources) {
 			resolutionMap[h?h:0] = i;
 		}
 	}
-	
+
 	for(var h in resolutionMap) {
 		if(h > settings.defaultResolution) {
 			if(defaultSource === undefined) defaultSource = resolutionMap[h];
@@ -193,7 +200,7 @@ function parseXSPlaylist(playlistURL, baseURL, altPosterURL, track, handlePlayli
 		var startTrack = track;
 		if(!(track >= 0 && track < x.length)) track = 0;
 		var list, I, info, mediaURL, posterURL, title;
-		
+
 		for(var i = 0; i < x.length; i++) {
 			// what about <jwplayer:streamer> rtmp??
 			I = (i + track) % x.length;
@@ -208,7 +215,7 @@ function parseXSPlaylist(playlistURL, baseURL, altPosterURL, track, handlePlayli
 				continue;
 			} else if(!info.isAudio) audioOnly = false;
 			info.url = mediaURL;
-			
+
 			list = x[I].getElementsByTagName("image");
 			if(list.length > 0) posterURL = list[0].textContent;
 			if(i === 0 && !posterURL) posterURL = altPosterURL;
@@ -218,7 +225,7 @@ function parseXSPlaylist(playlistURL, baseURL, altPosterURL, track, handlePlayli
 				list = x[I].getElementsByTagName("annotation");
 				if(list.length > 0) title = list[0].textContent;
 			}
-			
+
 			playlist.push({
 				"sources": [info],
 				"poster": posterURL,
