@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Marc Hoyois</string>
 	<key>Builder Version</key>
-	<string>8537.71</string>
+	<string>9537.71</string>
 	<key>CFBundleDisplayName</key>
 	<string>ClickToPlugin</string>
 	<key>CFBundleIdentifier</key>
@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.8.9</string>
+	<string>2.8.9b</string>
 	<key>CFBundleVersion</key>
-	<string>64</string>
+	<string>64b</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Global Page</key>
@@ -51,8 +51,6 @@
 			<string>All</string>
 		</dict>
 	</dict>
-	<key>Update Manifest URL</key>
-	<string>http://hoyois.github.com/safariextensions/updates.plist</string>
 	<key>Website</key>
 	<string>http://hoyois.github.com/safariextensions/clicktoplugin/</string>
 </dict>
