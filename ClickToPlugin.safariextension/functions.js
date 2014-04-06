@@ -69,7 +69,7 @@ function openInQuickTimePlayer(url) {
 }
 
 function openInQuickTimeHandler(url) {
-    var quickTimeURL = url.replace(/^https?/, "ctpQTopen");
+    var quickTimeURL = url.replace(/^http/, "ctpQTopen");
     safari.self.tab.dispatchMessage("openURL", quickTimeURL);
 }
 

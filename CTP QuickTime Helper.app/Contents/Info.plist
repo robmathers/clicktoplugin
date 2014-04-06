@@ -22,6 +22,18 @@
 	<string>1.0</string>
 	<key>CFBundleSignature</key>
 	<string>aplt</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>CTP QuickTime Helper</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ctpQTopen</string>
+				<string>ctpQTopens</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSMinimumSystemVersionByArchitecture</key>
 	<dict>
 		<key>x86_64</key>
@@ -34,7 +46,7 @@
 		<key>dividerCollapsed</key>
 		<false/>
 		<key>eventLogLevel</key>
-		<integer>-1</integer>
+		<integer>2</integer>
 		<key>name</key>
 		<string>ScriptWindowState</string>
 		<key>positionOfDivider</key>
@@ -42,19 +54,7 @@
 		<key>savedFrame</key>
 		<string>299 800 602 597 0 0 2560 1418 </string>
 		<key>selectedTabView</key>
-		<string>result</string>
+		<string>event log</string>
 	</dict>
-	<key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLName</key>
-            <string>CTP QuickTime Helper</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>ctpQTopen</string>
-            </array>
-        </dict>
-    </array>
-
 </dict>
 </plist>
