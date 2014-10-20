@@ -2,14 +2,22 @@
 // UPDATE
 if(settings.version === undefined) {
 	openTab(safari.extension.baseURI + "settings.html");
-} else if(settings.version < 64) {
+}
+if(settings.version < 64) {
 	var tmpArray = [];
 	for(var i = 0; i < settings.killers.length; i++) {
 		if(settings.killers[i] !== "killers/Vimeo.js") tmpArray.push(settings.killers[i]);
 	}
 	settings.killers = tmpArray;
 }
-settings.version = 68;
+if(settings.version < 69) {
+	var tmpArray = [];
+	for(var i = 0; i < settings.killers.length; i++) {
+		if(settings.killers[i] !== "killers/Break.js") tmpArray.push(settings.killers[i]);
+	}
+	settings.killers = tmpArray;
+}
+settings.version = 75;
 
 // LOCALIZATION
 localize(GLOBAL_STRINGS, settings.language);
@@ -31,6 +39,18 @@ function getSettings(array) {
 		s[key] = (isSecureSetting(key) ? secureSettings : settings)[key];
 	});
 	return s;
+}
+
+function getPlugins() {
+	var plugins = [];
+	for(var i = 0; i < navigator.plugins.length; i++) {
+		plugins.push({
+			"description": navigator.plugins[i].description,
+			"filename": navigator.plugins[i].filename,
+			"name": navigator.plugins[i].name
+		});
+	}
+	return plugins;
 }
 
 function isSecureSetting(key) {
@@ -107,7 +127,10 @@ function respondToMessage(event) {
 		changeSetting(event.message.setting, event.message.value);
 		break;
 	case "getSettings":
-		event.target.page.dispatchMessage("CTPsettings", getSettings(ALL_SETTINGS));
+		event.target.page.dispatchMessage("CTPsettings", {
+			"settings": getSettings(ALL_SETTINGS),
+			"plugins": getPlugins()
+		});
 		break;
 	}
 }

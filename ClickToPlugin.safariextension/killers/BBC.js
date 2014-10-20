@@ -1,16 +1,14 @@
 addKiller("BBC", {
 
 "canKill": function(data) {
-	return /^http:\/\/emp\.bbci\.co\.uk\/.*[es]mp\.swf/.test(data.src);
+	return /^http:\/\/emp\.bbci\.co\.uk\/.*\.swf/.test(data.src);
 },
 
 "process": function(data, callback) {
 	var flashvars = parseFlashVariables(data.params.flashvars);
-	var playlistURL = decodeURIComponent(flashvars.playlist);
-	
-	if(playlistURL === "undefined") { // sic
-		playlistURL = data.location.replace(/^http:\/\/www/, "http://playlists").replace(/[#?].*$/, "") + "A/playlist.sxml";
-	}
+	var playlistURL;
+	if(flashvars.playlist) playlistURL = decodeURIComponent(flashvars.playlist);
+	else playlistURL = data.location.replace(/^https?:\/\/[^\/]*\//, "http://playlists.bbc.co.uk/").replace(/[#?].*$/, "") + "A/playlist.sxml";
 	
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", playlistURL, true);

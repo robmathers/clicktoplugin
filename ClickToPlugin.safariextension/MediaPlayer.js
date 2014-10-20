@@ -3,10 +3,8 @@
 MediaPlayer class
 ****************/
 
-function MediaPlayer(width, height, contextInfo) {
+function MediaPlayer(contextInfo) {
 	this.playlist = [];
-	this.width = width;
-	this.height = height;
 	this.contextInfo = contextInfo;
 	this.currentTrack = 0;
 }
@@ -104,11 +102,9 @@ MediaPlayer.prototype.init = function(style) {
 	}
 	
 	// Set styles
-	this.container.style.setProperty("width", this.width + "px", "important");
-	this.container.style.setProperty("height", this.height + "px", "important");
-	this.mediaElement.style.setProperty("width", this.width + "px", "important");
-	this.mediaElement.style.setProperty("height", this.height + "px", "important");
-	applyCSS(this.container, style, ["position", "top", "right", "bottom", "left", "z-index", "clear", "float", "vertical-align", "margin-top", "margin-right", "margin-bottom", "margin-left", "-webkit-margin-before-collapse", "-webkit-margin-after-collapse"]);
+	this.mediaElement.style.setProperty("width", "inherit", "important");
+	this.mediaElement.style.setProperty("height", "inherit", "important");
+	applyCSS(this.container, style, ["width", "height", "position", "top", "right", "bottom", "left", "z-index", "clear", "float", "vertical-align", "margin-top", "margin-right", "margin-bottom", "margin-left", "-webkit-margin-before-collapse", "-webkit-margin-after-collapse"]);
 	
 	// Set volume
 	this.mediaElement.volume = settings.volume;
@@ -131,12 +127,16 @@ MediaPlayer.prototype.destroy = function() {
 };
 
 MediaPlayer.prototype.initPlaylistControls = function() {
+	// Do nothing for Safari 7.1+ (prev/next buttons don't exist)
+	var v = /\bVersion\/(\d+)\.(\d+)/.exec(navigator.appVersion);
+	if(/\+/.test(navigator.appVersion) || parseInt(v[1]) > 7 || (parseInt(v[1]) === 7 && parseInt(v[2]) > 0)) return;
+	
 	var _this = this;
 	var x = settings.hideRewindButton ? 0 : 26;
 	this.mediaElement.addEventListener("click", function(event) {
 		if(event.target !== this) return; // click on trackSelector
 		var coord = _this.getCoordinates(event);
-		if(coord.y + 25 > _this.height && event.target.controls) { // click in controls
+		if(coord.y + 25 > _this.mediaElement.offsetHeight && event.target.controls) { // click in controls
 			if(coord.x >= x + 5 && coord.x <= x + 24) {
 				event.preventDefault();
 				_this.prevTrack();
@@ -363,7 +363,7 @@ MediaPlayer.prototype.addEventListener = function(type, handler) {
 	if(type === "click" || type === "dblclick") { // ignore clicks on controls
 		var _this = this;
 		this.container.addEventListener(type, function(event) {
-			if(event.target !== _this.mediaElement || (_this.mediaElement.controls && event.offsetY + 25 > _this.height)) return;
+			if(event.target !== _this.mediaElement || (_this.mediaElement.controls && event.offsetY + 25 > _this.mediaElement.offsetHeight)) return;
 			handler(event);
 		}, false);
 	} else {
@@ -539,8 +539,8 @@ MediaPlayer.prototype.initSourceSelector = function() {
 			    }
 			if(settings.showAirPlaySource && player.currentSource !== undefined) append("AirPlay", clickAirPlay);
 			
-			// Unhide if it doesn't overflow
-			if(list.childNodes.length > 0 && container.offsetWidth + 10 < player.width && container.offsetHeight + (player.mediaElement ? 35 : 10) < player.height) container.classList.remove("CTPhidden");
+			// Unhide (even if it overflows)
+			if(list.childNodes.length > 0) container.classList.remove("CTPhidden");
 		},
 		
 		"setSource": function(i) {

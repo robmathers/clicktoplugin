@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Marc Hoyois</string>
 	<key>Builder Version</key>
-	<string>9537.74.9</string>
+	<string>10600.1.25</string>
 	<key>CFBundleDisplayName</key>
 	<string>ClickToPlugin</string>
 	<key>CFBundleIdentifier</key>
@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.9.2b</string>
+	<string>2.9.9b</string>
 	<key>CFBundleVersion</key>
-	<string>68b</string>
+	<string>75b</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Global Page</key>
@@ -39,6 +39,8 @@
 	</dict>
 	<key>Description</key>
 	<string>Prevents plug-ins from loading automatically</string>
+	<key>DeveloperIdentifier</key>
+	<string>99PV9383JR</string>
 	<key>ExtensionInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>Permissions</key>
