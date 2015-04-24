@@ -6,11 +6,12 @@ addKiller("Brightcove", {
 
 "process": function(data, callback) {
 	var isSecure = data.src.charAt(4) === "s";
+	var flashvars = parseFlashVariables(data.params.flashvars);
+	
 	var url;
 	if(/[&?]playerID=/.test(data.src)) {
 		url = data.src.replace("federated_f9", "htmlFederated");
 	} else {
-		var flashvars = parseFlashVariables(data.params.flashvars);
 		url = (isSecure ? "https://secure" : "http://c") + ".brightcove.com/services/viewer/htmlFederated?playerID=" + flashvars.playerID + "&playerKey=" + flashvars.playerKey + "&%40videoPlayer=" + flashvars.videoId;
 	}
 	

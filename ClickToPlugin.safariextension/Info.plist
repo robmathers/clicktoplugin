@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Marc Hoyois</string>
 	<key>Builder Version</key>
-	<string>10600.1.25</string>
+	<string>10600.4.10.7</string>
 	<key>CFBundleDisplayName</key>
 	<string>ClickToPlugin</string>
 	<key>CFBundleIdentifier</key>
@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.9.9b</string>
+	<string>3.1.2b</string>
 	<key>CFBundleVersion</key>
-	<string>75b</string>
+	<string>79b</string>
 	<key>Chrome</key>
 	<dict>
 		<key>Global Page</key>

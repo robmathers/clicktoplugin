@@ -102,16 +102,13 @@ MediaPlayer.prototype.init = function(style) {
 	}
 	
 	// Set styles
-	this.mediaElement.style.setProperty("width", "inherit", "important");
-	this.mediaElement.style.setProperty("height", "inherit", "important");
-	applyCSS(this.container, style, ["width", "height", "position", "top", "right", "bottom", "left", "z-index", "clear", "float", "vertical-align", "margin-top", "margin-right", "margin-bottom", "margin-left", "-webkit-margin-before-collapse", "-webkit-margin-after-collapse"]);
+	applyCSS(this.container, style, ["width", "height", "min-width", "max-width", "min-height", "max-height", "position", "top", "right", "bottom", "left", "z-index", "clear", "float", "vertical-align", "margin-top", "margin-right", "margin-bottom", "margin-left", "-webkit-margin-before-collapse", "-webkit-margin-after-collapse"]);
 	
 	// Set volume
 	this.mediaElement.volume = settings.volume;
 	
 	// Additional controls
 	this.initTrackSelector();
-	if(this.playlistLength > 1) this.initPlaylistControls();
 	if(this.sourceSelector) {
 		this.sourceSelector.updateHandlers();
 		this.sourceSelector.attachTo(this.container);
@@ -123,29 +120,7 @@ MediaPlayer.prototype.init = function(style) {
 };
 
 MediaPlayer.prototype.destroy = function() {
-	if(this.restoreScript) injectScript("(function(){" + this.restoreScript + "})();");
-};
-
-MediaPlayer.prototype.initPlaylistControls = function() {
-	// Do nothing for Safari 7.1+ (prev/next buttons don't exist)
-	var v = /\bVersion\/(\d+)\.(\d+)/.exec(navigator.appVersion);
-	if(/\+/.test(navigator.appVersion) || parseInt(v[1]) > 7 || (parseInt(v[1]) === 7 && parseInt(v[2]) > 0)) return;
-	
-	var _this = this;
-	var x = settings.hideRewindButton ? 0 : 26;
-	this.mediaElement.addEventListener("click", function(event) {
-		if(event.target !== this) return; // click on trackSelector
-		var coord = _this.getCoordinates(event);
-		if(coord.y + 25 > _this.mediaElement.offsetHeight && event.target.controls) { // click in controls
-			if(coord.x >= x + 5 && coord.x <= x + 24) {
-				event.preventDefault();
-				_this.prevTrack();
-			} else if(coord.x >= x + 53 && coord.x <= x + 72) {
-				event.preventDefault();
-				_this.nextTrack();
-			}
-		}
-	}, false);
+	if(this.restoreScript) injectScript("(function(){" + this.restoreScript + "}).call(document.getElementById(\"" + this.mediaElement.id + "\"));");
 };
 
 MediaPlayer.prototype.nextTrack = function() {
@@ -331,6 +306,22 @@ MediaPlayer.prototype.registerShortcuts = function() {
 				}
 			});
 		}
+		if(settings[x].seekBackward) {
+			this.addEventListener(settings[x].seekBackward.type, function(event) {
+				if(testShortcut(event, settings[x].seekBackward)) {
+					var newTime = _this.mediaElement.currentTime - settings.seekTime;
+					_this.mediaElement.currentTime = Math.max(newTime, 0)
+				}
+			});
+		}
+		if(settings[x].seekForward) {
+			this.addEventListener(settings[x].seekForward.type, function(event) {
+				if(testShortcut(event, settings[x].seekForward)) {
+					var newTime = _this.mediaElement.currentTime + settings.seekTime;
+					_this.mediaElement.currentTime = Math.min(newTime, _this.mediaElement.duration);
+				}
+			});
+		}
 		if(this.playlistLength > 1) {
 			if(settings[x].prevTrack) {
 				this.addEventListener(settings[x].prevTrack.type, function(event) {
@@ -395,7 +386,7 @@ MediaPlayer.prototype.initShadowDOM = function() {
 	// Hide status display in fullscreen
 	sheet.insertRule("#" + this.mediaElement.id + ":-webkit-full-screen::-webkit-media-controls-status-display{display:none;}", 0);
 	
-	var pseudoElements = {"controlsPanel": "-webkit-media-controls-panel", "statusDisplay": "-webkit-media-controls-status-display", "statusDisplayAfter": "-webkit-media-controls-status-display::after", "playButton": "-webkit-media-controls-play-button", "muteButton": "-webkit-media-controls-mute-button", "volumeSliderContainer": "-webkit-media-controls-volume-slider-container", "rewindButton": "-webkit-media-controls-rewind-button", "fullscreenButton": "-webkit-media-controls-fullscreen-button", "timelineContainer": "-webkit-media-controls-timeline-container", "seekBackButton": "-webkit-media-controls-seek-back-button", "seekForwardButton": "-webkit-media-controls-seek-forward-button"};
+	var pseudoElements = {"controlsPanel": "-webkit-media-controls-panel", "statusDisplay": "-webkit-media-controls-status-display", "statusDisplayAfter": "-webkit-media-controls-status-display::after", "playButton": "-webkit-media-controls-play-button", "muteButton": "-webkit-media-controls-mute-button", "volumeSliderContainer": "-webkit-media-controls-volume-slider-container", "rewindButton": "-webkit-media-controls-rewind-button", "fullscreenButton": "-webkit-media-controls-fullscreen-button", "timelineContainer": "-webkit-media-controls-timeline-container"};
 	
 	var shadowDOM = {};
 	for(var e in pseudoElements) {
@@ -438,9 +429,7 @@ MediaPlayer.prototype.initShadowDOM = function() {
 		// Reorder controls
 		if("WebkitOrder" in document.documentElement.style) { // Safari >= 6.1
 			shadowDOM.rewindButton.style.WebkitOrder = "-6";
-			shadowDOM.seekBackButton.style.WebkitOrder = "-5";
 			shadowDOM.playButton.style.WebkitOrder = "-4";
-			shadowDOM.seekForwardButton.style.WebkitOrder = "-3";
 			shadowDOM.timelineContainer.style.WebkitOrder = "-1";
 			shadowDOM.fullscreenButton.style.WebkitOrder = "1";
 		} else { // Safari < 6.1
@@ -448,23 +437,11 @@ MediaPlayer.prototype.initShadowDOM = function() {
 			shadowDOM.timelineContainer.style.WebkitBoxDirection = "normal";
 			shadowDOM.volumeSliderContainer.style.WebkitBoxDirection = "normal";
 			shadowDOM.rewindButton.style.WebkitBoxOrdinalGroup = "9";
-			shadowDOM.seekBackButton.style.WebkitBoxOrdinalGroup = "8";
 			shadowDOM.playButton.style.WebkitBoxOrdinalGroup = "7";
-			shadowDOM.seekForwardButton.style.WebkitBoxOrdinalGroup = "6";
 			shadowDOM.statusDisplay.style.WebkitBoxOrdinalGroup = "5";
 			shadowDOM.timelineContainer.style.WebkitBoxOrdinalGroup = "4";
 			shadowDOM.fullscreenButton.style.WebkitBoxOrdinalGroup = "1";
 		}
-		
-		// Show back/forward buttons
-		shadowDOM.seekBackButton.style.display = "block";
-		shadowDOM.seekBackButton.style.marginLeft = "5px";
-		shadowDOM.seekBackButton.style.width = "20px";
-		shadowDOM.seekBackButton.style.height = "12px";
-		shadowDOM.seekForwardButton.style.display = "block";
-		shadowDOM.seekForwardButton.style.marginLeft = "5px";
-		shadowDOM.seekForwardButton.style.width = "20px";
-		shadowDOM.seekForwardButton.style.height = "12px";
 	}
 	
 	this.shadowDOM = shadowDOM;

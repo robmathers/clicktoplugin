@@ -3,21 +3,15 @@
 if(settings.version === undefined) {
 	openTab(safari.extension.baseURI + "settings.html");
 }
-if(settings.version < 64) {
+if(settings.version < 77) {
 	var tmpArray = [];
 	for(var i = 0; i < settings.killers.length; i++) {
-		if(settings.killers[i] !== "killers/Vimeo.js") tmpArray.push(settings.killers[i]);
+		if(settings.killers[i] === "killers/IGN.js") tmpArray.push("killers/NYTimes.js");
+		else tmpArray.push(settings.killers[i]);
 	}
 	settings.killers = tmpArray;
 }
-if(settings.version < 69) {
-	var tmpArray = [];
-	for(var i = 0; i < settings.killers.length; i++) {
-		if(settings.killers[i] !== "killers/Break.js") tmpArray.push(settings.killers[i]);
-	}
-	settings.killers = tmpArray;
-}
-settings.version = 75;
+settings.version = 79;
 
 // LOCALIZATION
 localize(GLOBAL_STRINGS, settings.language);
@@ -27,11 +21,12 @@ safari.extension.addContentScript(localizationScript, [], [], false);
 // SETTINGS
 var ALL_SETTINGS = ["language", "currentTab", "killers", "loadIfNotKilled", "useFallbackMedia", "allowedPlugins", "locationsWhitelist", "sourcesWhitelist", "locationsBlacklist", "sourcesBlacklist", "invertWhitelists", "invertBlacklists", "mediaAutoload", "mediaWhitelist", "initialBehavior", "instantAutoplay", "defaultResolution", "defaultPlayer", "showMediaSources", "showPluginSource", "showQTPSource", "showAirPlaySource", "showSiteSource", "showPoster", "hideRewindButton", "codecsPolicy", "volume", "useDownloadManager", "settingsContext", "disableEnableContext", "addToWhitelistContext", "addToBlacklistContext", "loadAllContext", "loadInvisibleContext", "downloadContext", "viewOnSiteContext", "openInQTPContext", "airplayContext", "keys", "gestures", "allowInvisible", "sIFRPolicy", "opacity", "debug", "showTooltip", "airplayHostname", "airplayPassword"];
 var SECURE_SETTINGS = ["airplayPassword"];
-var INJECTED_SETTINGS = ["useFallbackMedia", "initialBehavior", "instantAutoplay", "defaultPlayer", "showMediaSources", "showPluginSource", "showQTPSource", "showAirPlaySource", "showSiteSource", "showPoster", "hideRewindButton", "volume", "useDownloadManager", "keys", "gestures", "sIFRPolicy", "opacity", "debug", "showTooltip"];
+var INJECTED_SETTINGS = ["useFallbackMedia", "initialBehavior", "instantAutoplay", "defaultPlayer", "showMediaSources", "showPluginSource", "showQTPSource", "showAirPlaySource", "showSiteSource", "showPoster", "hideRewindButton", "volume", "useDownloadManager", "keys", "gestures", "seekTime", "sIFRPolicy", "opacity", "debug", "showTooltip"];
 
 /* Hidden settings:
 language (default: undefined)
-maxInvisibleSize (default: 8) */
+maxInvisibleSize (default: 8)
+seekTime (default: 10) */
 
 function getSettings(array) {
 	var s = {};
